@@ -1,86 +1,62 @@
-import random
-import time
+import pygame
 import sys
-from personajes import LISTA_HEROES
-from enemigos import BASE_DE_DATOS_ENEMIGOS
 
-# --- FUNCIÓN DE NARRACIÓN ESTILO NOVELA ---
-def narrar(texto):
-    print("\n[HISTORIA]: ", end="")
-    for caracter in texto:
-        sys.stdout.write(caracter)
-        sys.stdout.flush()
-        time.sleep(0.02) # Velocidad de lectura
-    print("\n")
+# Inicialización de Pygame
+pygame.init()
 
-# --- MOTOR DE COMBATE MEJORADO ---
-def iniciar_combate(jugador, enemigo_data):
-    e_nombre = enemigo_data["nombre"]
-    e_hp = enemigo_data["hp"]
-    e_atk = enemigo_data["atk"]
-    e_desc = enemigo_data["desc"]
+# Configuración de la ventana
+ANCHO, ALTO = 800, 600
+pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pygame.display.set_caption("Espectro-Verso RPG: Visual Alpha")
+
+# Colores
+AZUL_ESPECTRAL = (0, 100, 255)
+BLANCO = (255, 255, 255)
+
+# Intentar cargar la imagen de Carlos
+try:
+    # Usamos el nombre del archivo que ya tienes en GitHub
+    imagen_carlos = pygame.image.load("IMG-20241015-WA0017.jpg")
+    imagen_carlos = pygame.transform.scale(imagen_carlos, (150, 200))
+except:
+    # Si la imagen no carga, usamos un rectángulo azul como respaldo
+    imagen_carlos = None
+    print("No se encontró la imagen, usando marcador.")
+
+# Posición inicial de Carlos
+carlos_x = 100
+carlos_y = 300
+velocidad = 5
+
+# Bucle principal del juego
+ejecutando = True
+while ejecutando:
+    pantalla.fill((30, 30, 30)) # Fondo oscuro
     
-    narrar(f"El aire se vuelve pesado... {e_desc}")
-    print(f"--- ¡PELIGRO! Aparece {e_nombre} ---")
-    
-    while jugador.hp > 0 and e_hp > 0:
-        print(f"\n{jugador.stats()}")
-        print(f"{e_nombre} | HP: {e_hp}")
-        print("-" * 30)
-        print("1. Atacar (Básico) | 2. ESPECIAL (20 KI) | 3. Inventario")
-        
-        opc = input("Selecciona tu acción: ")
-        
-        if opc == "1":
-            danio = jugador.atk + random.randint(0, 5)
-            e_hp -= danio
-            print(f"¡{jugador.nombre} conecta un golpe certero! Causa {danio} de daño.")
-        
-        elif opc == "2":
-            if jugador.ki >= 20:
-                jugador.ki -= 20
-                danio = jugador.atk * 3
-                print(f"¡{jugador.especial.upper()}!")
-                print(f"-> {jugador.desc_esp}")
-                e_hp -= danio
-            else:
-                print("¡No tienes suficiente KI para el especial!")
-        
-        elif opc == "3":
-            print("El inventario está vacío por ahora...")
-            continue # No gasta turno
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            ejecutando = False
 
-        # Turno del enemigo
-        if e_hp > 0:
-            d_e = e_atk + random.randint(-3, 3)
-            jugador.hp -= d_e
-            print(f"El {e_nombre} contraataca violentamente y te quita {d_e} HP.")
+    # Movimiento con teclado
+    teclas = pygame.key.get_pressed()
+    if teclas[pygame.K_LEFT]: carlos_x -= velocidad
+    if teclas[pygame.K_RIGHT]: carlos_x += velocidad
+    if teclas[pygame.K_UP]: carlos_y -= velocidad
+    if teclas[pygame.K_DOWN]: carlos_y += velocidad
 
-    if jugador.hp > 0:
-        print(f"\n¡Has vencido al {e_nombre}!")
-        narrar("El portal blanco brilla a lo lejos... una nueva aventura aguarda.")
+    # Dibujar a Carlos
+    if imagen_carlos:
+        pantalla.blit(imagen_carlos, (carlos_x, carlos_y))
     else:
-        print("\nHas caído en batalla...")
-        narrar("Tu alma regresa al flujo del Espectro-verso para intentarlo una vez más.")
+        pygame.draw.rect(pantalla, AZUL_ESPECTRAL, (carlos_x, carlos_y, 50, 100))
 
-# --- INICIO DEL JUEGO ---
-if __name__ == "__main__":
-    narrar("Bienvenido al Espectro-Verso RPG, Silver Breaker.")
-    narrar("Una batalla se encontraba realizando en un mundo de magia y hechicería...")
-    
-    print("\n--- SELECCIONA TU HÉROE ---")
-    for i, heroe in enumerate(LISTA_HEROES):
-        print(f"{i+1}. {heroe.nombre} ({heroe.especial})")
-    
-    try:
-        eleccion = int(input("\nElige el número de tu héroe: ")) - 1
-        mi_heroe = LISTA_HEROES[eleccion]
-        
-        narrar(f"Has elegido a {mi_heroe.nombre}. El destino del multiverso está en tus manos.")
-        
-        # Encuentro aleatorio
-        enemigo_al_azar = random.choice(BASE_DE_DATOS_ENEMIGOS)
-        iniciar_combate(mi_heroe, enemigo_al_azar)
-        
-    except (ValueError, IndexError):
-        print("Elección inválida. El vacío te ha consumido.")
+    # Texto de ayuda
+    fuente = pygame.font.SysFont("Arial", 24)
+    texto = fuente.render("Usa las flechas para mover a Carlos Téllez", True, BLANCO)
+    pantalla.blit(texto, (20, 20))
+
+    pygame.display.flip()
+    pygame.time.Clock().tick(60)
+
+pygame.quit()
+sys.exit()
